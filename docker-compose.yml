@@ -1,0 +1,13 @@
+services:
+  pg:
+    image: postgres
+    environment:
+      POSTGRES_DB: training
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: bujhm123
+      PGDATA: /var/lib/postgresql/data
+    ports:
+        #слева внешний порт/ внутренний порт контейнера
+      - "5435:5432"
+    volumes:
+      - ./postgresdata:/var/lib/postgresql/data
