@@ -1,7 +1,11 @@
 from app.database.base import Base
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, func
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.post import Post
 
 
 class User(Base):
@@ -12,3 +16,5 @@ class User(Base):
         server_default=func.now(),
         default=datetime.now,
     )
+
+    posts: Mapped[list["Post"]] = relationship("Post", back_populates="user")
