@@ -5,8 +5,8 @@ from app.core.config import settings
 class DataBaseConstructor:
     def __init__(self, url: str, echo: bool):
         self.engine = create_async_engine(
-            url=settings.url,
-            echo=settings.echo,
+            url=url,
+            echo=echo,
         )
         self.session_factory = async_sessionmaker(
             bind=self.engine,
