@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.post import Post
+    from app.models.profile import Profile
 
 
 class User(Base):
@@ -17,4 +18,14 @@ class User(Base):
         default=datetime.now,
     )
 
-    posts: Mapped[list["Post"]] = relationship("Post", back_populates="user")
+    posts: Mapped[list["Post"]] = relationship(
+        "Post",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    profile: Mapped["Profile"] = relationship(
+        "Profile",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        # uselist=False,
+    )

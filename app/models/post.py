@@ -11,6 +11,6 @@ class Post(Base):
     __tablename__ = "posts"
     title: Mapped[str] = mapped_column(String(60))
     body: Mapped[str | None]
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped["User"] = relationship("User", back_populates="posts")
