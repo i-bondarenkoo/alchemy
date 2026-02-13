@@ -1,9 +1,20 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, Path
-from app.schemas.user import CreateUserSchema, ResponseUserSchema
+from app.models.user import User
+from app.schemas.user import (
+    CreateUserSchema,
+    ResponseUserSchema,
+    ResponseUserSchemaWithPosts,
+)
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.db import db_constructor
-from app.crud.user import create_user_crud, get_list_users_crud, get_user_by_id_crud
+from app.crud.user import (
+    create_user_crud,
+    delete_user_crud,
+    get_list_users_crud,
+    get_user_by_id_crud,
+    get_user_with_posts_crud,
+)
 from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
@@ -56,3 +67,31 @@ async def get_list_users(
             detail="Начальный диапазон, для списка, не может быть больше конечного",
         )
     return await get_list_users_crud(start=start, stop=stop, session=session)
+
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: Annotated[int, Path(ge=1, description="ID пользователя для удаления")],
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    user = await delete_user_crud(user_id=user_id, session=session)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пользователь не найден",
+        )
+    return user
+
+
+@router.get("/{user_id}/posts", response_model=ResponseUserSchemaWithPosts)
+async def get_user_with_posts(
+    user_id: Annotated[int, Path(ge=1, description="ID пользователя")],
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    user = await get_user_with_posts_crud(user_id=user_id, session=session)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пользователь не найден",
+        )
+    return user

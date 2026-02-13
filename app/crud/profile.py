@@ -1,0 +1,22 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.profile import CreateProfileSchema
+from app.models.profile import Profile
+from sqlalchemy import select
+
+
+async def create_profile_crud(
+    profile_in: CreateProfileSchema,
+    session: AsyncSession,
+):
+    new_profile = Profile(**profile_in.model_dump())
+    session.add(new_profile)
+    await session.commit()
+    await session.refresh(new_profile)
+    return new_profile
+
+
+async def get_profile_crud(user_id: int, session: AsyncSession):
+    stmt = select(Profile).where(Profile.user_id == user_id)
+    result = await session.execute(stmt)
+    profile = result.scalars().one_or_none()
+    return profile
