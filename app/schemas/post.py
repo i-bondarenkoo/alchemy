@@ -1,5 +1,4 @@
 from pydantic import BaseModel, ConfigDict
-from app.schemas.user import ResponseUserForOtherRelationship
 from typing import TYPE_CHECKING
 
 

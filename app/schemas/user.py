@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 
 from typing import TYPE_CHECKING, Optional
 
+
 if TYPE_CHECKING:
     from app.schemas.profile import ResponseProfileRelationForUser
     from app.schemas.post import ResponsePostSchemaForRelation
