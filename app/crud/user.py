@@ -39,9 +39,22 @@ async def get_user_with_posts_crud(user_id: int, session: AsyncSession):
         select(User)
         .where(User.id == user_id)
         .options(
-            joinedload(User.posts),
+            selectinload(User.posts),
         )
     )
     result = await session.execute(stmt)
-    user = result.unique().scalars().one_or_none()
+    user = result.scalars().one_or_none()
+    return user
+
+
+async def get_user_with_profile_crud(user_id: int, session: AsyncSession):
+    stmt = (
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            joinedload(User.profile),
+        )
+    )
+    result = await session.execute(stmt)
+    user = result.scalars().one_or_none()
     return user
