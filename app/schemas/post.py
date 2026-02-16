@@ -1,10 +1,10 @@
 from pydantic import BaseModel, ConfigDict
-from app.schemas.user import ResponseUserForOtherRaletionship
+from app.schemas.user import ResponseUserForOtherRelationship
 from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.schemas.user import ResponseUserForOtherRaletionship
+    from app.schemas.user import ResponseUserForOtherRelationship
 
 
 class CreatePostSchema(BaseModel):
@@ -31,4 +31,4 @@ class ResponsePostWithUser(BaseModel):
     id: int
     body: str | None = None
     title: str
-    user: ResponseUserForOtherRaletionship
+    user: "ResponseUserForOtherRelationship"

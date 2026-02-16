@@ -32,11 +32,11 @@ class ResponseUserSchemaWithProfiles(BaseModel):
     id: int
     username: str
     email: EmailStr
-    profile: Optional["ResponseProfileRelationForUser"] | None
+    profile: Optional["ResponseProfileRelationForUser"] = None
     model_config = ConfigDict(from_attributes=True)
 
 
-class ResponseUserForOtherRaletionship(BaseModel):
+class ResponseUserForOtherRelationship(BaseModel):
     username: str
     email: EmailStr
     created_at: datetime

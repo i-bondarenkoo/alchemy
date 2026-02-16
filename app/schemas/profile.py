@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
-from app.schemas.user import ResponseUserForOtherRaletionship
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.schemas.user import ResponseUserForOtherRelationship
 
 
 class CreateProfileSchema(BaseModel):
@@ -33,4 +35,4 @@ class ResponseProfileWithUser(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     bio: str | None = None
-    user: Optional["ResponseUserForOtherRaletionship"] | None = None
+    user: Optional["ResponseUserForOtherRelationship"] = None

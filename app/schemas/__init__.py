@@ -3,7 +3,7 @@ from app.schemas.user import (
     ResponseUserSchema,
     ResponseUserSchemaWithPosts,
     ResponseUserSchemaWithProfiles,
-    ResponseUserForOtherRaletionship,
+    ResponseUserForOtherRelationship,
 )
 from app.schemas.post import (
     CreatePostSchema,
