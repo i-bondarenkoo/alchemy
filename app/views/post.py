@@ -52,3 +52,8 @@ async def get_post_with_user(
             detail="Пост не найден",
         )
     return post
+
+
+@router.post("/{post_id}/tags/{tag_id}")
+async def add_tag_to_post():
+    pass
