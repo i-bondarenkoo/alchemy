@@ -2,9 +2,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import db_constructor
 from fastapi import APIRouter, Depends, Body, HTTPException, status, Path
 from typing import Annotated
-from app.schemas.post import CreatePostSchema, ResponsePostSchema, ResponsePostWithUser
+from app.schemas.post import (
+    CreatePostSchema,
+    ResponsePostWithTags,
+    ResponsePostSchema,
+    ResponsePostWithUser,
+)
 from app.crud.user import get_user_by_id_crud
-from app.crud.post import create_post_crud, get_post_with_user_crud, get_post_by_id_crud
+from app.crud.post import (
+    create_post_crud,
+    add_tag_to_post_crud,
+    get_post_with_user_crud,
+    get_post_by_id_crud,
+    get_post_with_tags_crud,
+    add_tag_to_post_crud,
+)
+
+from app.crud.tag import get_tag_by_id_crud
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
     prefix="/posts",
@@ -55,5 +70,41 @@ async def get_post_with_user(
 
 
 @router.post("/{post_id}/tags/{tag_id}")
-async def add_tag_to_post():
-    pass
+async def add_tag_to_post(
+    post_id: Annotated[int, Path(ge=1)],
+    tag_id: Annotated[int, Path(ge=1)],
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    post = await get_post_by_id_crud(post_id=post_id, session=session)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пост  не существует",
+        )
+    tag = await get_tag_by_id_crud(tag_id=tag_id, session=session)
+    if tag is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Тэг  не существует",
+        )
+    query = await add_tag_to_post_crud(post_id=post_id, tag_id=tag_id, session=session)
+    if query is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Пост с таким тэгом уже существует",
+        )
+    return query
+
+
+@router.get("/{post_id}/tags", response_model=ResponsePostWithTags)
+async def get_post_with_tags(
+    post_id: Annotated[int, Path(ge=1)],
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    post = await get_post_with_tags_crud(post_id=post_id, session=session)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пост не найден",
+        )
+    return post

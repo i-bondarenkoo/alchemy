@@ -31,7 +31,9 @@ async def create_profile(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Пользователь не существует",
         )
-    profile = await get_profile_by_id_crud(user_id=profile_in.user_id, session=session)
+    profile = await get_profile_by_id_crud(
+        profile_id=profile_in.user_id, session=session
+    )
     if profile is None:
         return await create_profile_crud(profile_in=profile_in, session=session)
     raise HTTPException(

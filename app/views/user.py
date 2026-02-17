@@ -38,7 +38,7 @@ async def create_user(
     except IntegrityError as e:
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Пользователь с таким username или email уже существует",
         )
     return user

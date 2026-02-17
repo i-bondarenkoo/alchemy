@@ -2,7 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.post import CreatePostSchema
 from app.models.post import Post
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
+from fastapi import status, HTTPException
+
+# from sqlalchemy import insert
+# from app.models.post_tag import association_table
+from app.models.tag import Tag
 
 
 async def create_post_crud(post_in: CreatePostSchema, session: AsyncSession):
@@ -23,6 +28,52 @@ async def get_post_with_user_crud(post_id: int, session: AsyncSession):
         .where(Post.id == post_id)
         .options(
             joinedload(Post.user),
+        )
+    )
+    result = await session.execute(stmt)
+    post = result.scalars().one_or_none()
+    return post
+
+
+# async def add_tag_to_post_crud(post_id: int, tag_id: int, session: AsyncSession):
+#     d_values = {
+#         "tag_id": tag_id,
+#         "post_id": post_id,
+#     }
+#     stmt = insert(association_table).values(d_values)
+#     await session.execute(stmt)
+#     await session.commit()
+#     return {"message": "данные добавлены"}
+
+
+async def add_tag_to_post_crud(post_id: int, tag_id: int, session: AsyncSession):
+    stmt = (
+        select(Post)
+        .where(Post.id == post_id)
+        .options(
+            selectinload(
+                Post.tags,
+            )
+        )
+    )
+    result = await session.execute(stmt)
+    post = result.scalars().one_or_none()
+    tag = await session.get(Tag, tag_id)
+    if tag in post.tags:
+        return None
+    post.tags.append(tag)
+    await session.commit()
+    return {"message": "Тэг добавлен к посту"}
+
+
+async def get_post_with_tags_crud(post_id: int, session: AsyncSession):
+    stmt = (
+        select(Post)
+        .where(Post.id == post_id)
+        .options(
+            selectinload(
+                Post.tags,
+            )
         )
     )
     result = await session.execute(stmt)

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.schemas.user import ResponseUserForOtherRelationship
+    from app.schemas.tag import ResponseTagForRelationship
 
 
 class CreatePostSchema(BaseModel):
@@ -31,3 +32,10 @@ class ResponsePostWithUser(BaseModel):
     body: str | None = None
     title: str
     user: "ResponseUserForOtherRelationship"
+
+
+class ResponsePostWithTags(BaseModel):
+    id: int
+    body: str | None = None
+    title: str
+    tags: list["ResponseTagForRelationship"]

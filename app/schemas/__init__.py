@@ -10,6 +10,7 @@ from app.schemas.post import (
     ResponsePostSchema,
     ResponsePostSchemaForRelation,
     ResponsePostWithUser,
+    ResponsePostWithTags,
 )
 from app.schemas.profile import (
     CreateProfileSchema,
@@ -17,9 +18,14 @@ from app.schemas.profile import (
     ResponseProfileSchema,
     ResponseProfileWithUser,
 )
-from app.schemas.tag import CreateTagSchema, ResponseTagSchema
+from app.schemas.tag import (
+    CreateTagSchema,
+    ResponseTagSchema,
+    ResponseTagForRelationship,
+)
 
 ResponseUserSchemaWithPosts.model_rebuild()
 ResponseUserSchemaWithProfiles.model_rebuild()
 ResponsePostWithUser.model_rebuild()
 ResponseProfileWithUser.model_rebuild()
+ResponsePostWithTags.model_rebuild()
