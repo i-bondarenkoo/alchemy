@@ -17,6 +17,7 @@ from app.schemas.profile import (
     ResponseProfileSchema,
     ResponseProfileWithUser,
 )
+from app.schemas.tag import CreateTagSchema, ResponseTagSchema
 
 ResponseUserSchemaWithPosts.model_rebuild()
 ResponseUserSchemaWithProfiles.model_rebuild()
