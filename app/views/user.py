@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, Path
-from app.models.user import User
+
 from app.schemas.user import (
     CreateUserSchema,
     ResponseUserSchema,
     ResponseUserSchemaWithPosts,
     ResponseUserSchemaWithProfiles,
+    ResponseUserWithPostAndTags,
 )
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,7 @@ from app.crud.user import (
     get_user_by_id_crud,
     get_user_with_posts_crud,
     get_user_with_profile_crud,
+    get_user_with_posts_and_posts_with_tags_crud,
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -109,6 +111,23 @@ async def get_user_with_profile(
 ):
     user = await get_user_with_profile_crud(user_id=user_id, session=session)
 
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Пользователь не найден",
+        )
+    return user
+
+
+@router.get("/{user_id}/all", response_model=ResponseUserWithPostAndTags)
+async def get_user_with_posts_and_posts_with_tags(
+    user_id: Annotated[int, Path(ge=1, description=("ID Пользователя"))],
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    user = await get_user_with_posts_and_posts_with_tags_crud(
+        user_id=user_id,
+        session=session,
+    )
     if user is None:
         raise HTTPException(
             status_code=404,

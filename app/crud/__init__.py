@@ -5,6 +5,7 @@ from app.crud.user import (
     delete_user_crud,
     get_user_with_posts_crud,
     get_user_with_profile_crud,
+    get_user_with_posts_and_posts_with_tags_crud,
 )
 from app.crud.post import (
     create_post_crud,

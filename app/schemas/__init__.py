@@ -4,6 +4,7 @@ from app.schemas.user import (
     ResponseUserSchemaWithPosts,
     ResponseUserSchemaWithProfiles,
     ResponseUserForOtherRelationship,
+    ResponseUserWithPostAndTags,
 )
 from app.schemas.post import (
     CreatePostSchema,
@@ -31,3 +32,4 @@ ResponsePostWithUser.model_rebuild()
 ResponseProfileWithUser.model_rebuild()
 ResponsePostWithTags.model_rebuild()
 ResponseTagWithPosts.model_rebuild()
+ResponseUserWithPostAndTags.model_rebuild()

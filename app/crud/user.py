@@ -1,6 +1,7 @@
 from app.schemas.user import CreateUserSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
+from app.models.post import Post
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 
@@ -57,4 +58,22 @@ async def get_user_with_profile_crud(user_id: int, session: AsyncSession):
     )
     result = await session.execute(stmt)
     user = result.scalars().one_or_none()
+    return user
+
+
+async def get_user_with_posts_and_posts_with_tags_crud(
+    user_id: int, session: AsyncSession
+):
+    stmt = (
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            selectinload(User.posts),
+            selectinload(Post.tags),
+        )
+    )
+    result = await session.execute(stmt)
+    user = result.scalars().one_or_none()
+    if user is None:
+        return None
     return user

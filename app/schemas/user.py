@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from app.schemas.profile import ResponseProfileRelationForUser
-    from app.schemas.post import ResponsePostSchemaForRelation
+    from app.schemas.post import ResponsePostSchemaForRelation, ResponsePostWithTags
 
 
 class CreateUserSchema(BaseModel):
@@ -42,3 +42,10 @@ class ResponseUserForOtherRelationship(BaseModel):
     email: EmailStr
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+
+class ResponseUserWithPostAndTags(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    posts: list["ResponsePostWithTags"]
