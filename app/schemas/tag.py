@@ -1,5 +1,10 @@
 from pydantic import BaseModel, ConfigDict
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.schemas.post import ResponsePostSchemaForRelation
+
 
 class CreateTagSchema(BaseModel):
     name: str
@@ -12,4 +17,9 @@ class ResponseTagSchema(CreateTagSchema):
 
 
 class ResponseTagForRelationship(CreateTagSchema):
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResponseTagWithPosts(CreateTagSchema):
+    posts: list["ResponsePostSchemaForRelation"]
     model_config = ConfigDict(from_attributes=True)

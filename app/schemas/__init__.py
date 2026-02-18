@@ -22,6 +22,7 @@ from app.schemas.tag import (
     CreateTagSchema,
     ResponseTagSchema,
     ResponseTagForRelationship,
+    ResponseTagWithPosts,
 )
 
 ResponseUserSchemaWithPosts.model_rebuild()
@@ -29,3 +30,4 @@ ResponseUserSchemaWithProfiles.model_rebuild()
 ResponsePostWithUser.model_rebuild()
 ResponseProfileWithUser.model_rebuild()
 ResponsePostWithTags.model_rebuild()
+ResponseTagWithPosts.model_rebuild()

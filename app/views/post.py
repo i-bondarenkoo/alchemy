@@ -75,20 +75,19 @@ async def add_tag_to_post(
     tag_id: Annotated[int, Path(ge=1)],
     session: AsyncSession = Depends(db_constructor.get_session),
 ):
-    post = await get_post_by_id_crud(post_id=post_id, session=session)
-    if post is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пост  не существует",
-        )
-    tag = await get_tag_by_id_crud(tag_id=tag_id, session=session)
-    if tag is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Тэг  не существует",
-        )
+
     query = await add_tag_to_post_crud(post_id=post_id, tag_id=tag_id, session=session)
-    if query is None:
+    if query == "post_not_found":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Пост не найден",
+        )
+    elif query == "tag_not_found":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Тэг не найден",
+        )
+    elif query is None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Пост с таким тэгом уже существует",

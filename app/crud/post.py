@@ -58,7 +58,11 @@ async def add_tag_to_post_crud(post_id: int, tag_id: int, session: AsyncSession)
     )
     result = await session.execute(stmt)
     post = result.scalars().one_or_none()
+    if post is None:
+        return "post_not_found"
     tag = await session.get(Tag, tag_id)
+    if tag is None:
+        return "tag_not_found"
     if tag in post.tags:
         return None
     post.tags.append(tag)

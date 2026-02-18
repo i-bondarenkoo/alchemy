@@ -1,8 +1,8 @@
-from app.crud.tag import create_tag_crud, get_tag_by_id_crud
+from app.crud.tag import create_tag_crud, get_tag_by_id_crud, get_tag_with_posts_crud
 from fastapi import APIRouter, Body, HTTPException, Path, Depends, status
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.tag import CreateTagSchema, ResponseTagSchema
+from app.schemas.tag import CreateTagSchema, ResponseTagSchema, ResponseTagWithPosts
 from app.database.db import db_constructor
 from sqlalchemy.exc import IntegrityError
 
@@ -33,6 +33,20 @@ async def get_tag_by_id(
     session: AsyncSession = Depends(db_constructor.get_session),
 ):
     tag = await get_tag_by_id_crud(tag_id=tag_id, session=session)
+    if tag is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Тэг не найден",
+        )
+    return tag
+
+
+@router.get("/{tag_id}/posts", response_model=ResponseTagWithPosts)
+async def get_tag_with_posts(
+    tag_id: Annotated[int, Path(ge=1)],
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    tag = await get_tag_with_posts_crud(tag_id=tag_id, session=session)
     if tag is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
