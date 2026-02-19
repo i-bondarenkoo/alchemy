@@ -68,8 +68,7 @@ async def get_user_with_posts_and_posts_with_tags_crud(
         select(User)
         .where(User.id == user_id)
         .options(
-            selectinload(User.posts),
-            selectinload(Post.tags),
+            selectinload(User.posts).selectinload(Post.tags),
         )
     )
     result = await session.execute(stmt)
