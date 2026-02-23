@@ -6,7 +6,10 @@ from app.schemas.user import (
     ResponseUserSchemaWithPosts,
     ResponseUserSchemaWithProfiles,
     ResponseUserWithPostAndTags,
+    PatchUpdateUserSchema,
+    FullUpdateUserSchema,
 )
+from app.models.user import User
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.db import db_constructor
@@ -18,6 +21,8 @@ from app.crud.user import (
     get_user_with_posts_crud,
     get_user_with_profile_crud,
     get_user_with_posts_and_posts_with_tags_crud,
+    update_user_crud,
+    get_user_by_id_dep,
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -134,3 +139,47 @@ async def get_user_with_posts_and_posts_with_tags(
             detail="Пользователь не найден",
         )
     return user
+
+
+@router.patch("/{user_id}", response_model=ResponseUserSchema)
+async def patch_update_user(
+    user_in: Annotated[
+        PatchUpdateUserSchema, Body(description="данные для обновления")
+    ],
+    session: AsyncSession = Depends(db_constructor.get_session),
+    user: User = Depends(get_user_by_id_dep),
+):
+
+    update_user = await update_user_crud(
+        user_in=user_in,
+        session=session,
+        partial=True,
+        user=user,
+    )
+    if update_user == "словарь пустой":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Данные для обновления не передали",
+        )
+    return update_user
+
+
+@router.put("/{user_id}", response_model=ResponseUserSchema)
+async def full_update_user(
+    user_in: Annotated[FullUpdateUserSchema, Body(description="данные для обновления")],
+    user: User = Depends(get_user_by_id_dep),
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+
+    update_user = await update_user_crud(
+        user_in=user_in,
+        session=session,
+        partial=False,
+        user=user,
+    )
+    if update_user == "словарь пустой":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Данные для обновления не передали",
+        )
+    return update_user

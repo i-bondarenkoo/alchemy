@@ -38,6 +38,7 @@ class ResponseUserSchemaWithProfiles(BaseModel):
 
 
 class ResponseUserForOtherRelationship(BaseModel):
+    # id: int
     username: str
     email: EmailStr
     created_at: datetime
@@ -49,3 +50,13 @@ class ResponseUserWithPostAndTags(BaseModel):
     username: str
     email: EmailStr
     posts: list["ResponsePostWithTags"]
+
+
+class PatchUpdateUserSchema(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+
+
+class FullUpdateUserSchema(BaseModel):
+    username: str
+    email: EmailStr
