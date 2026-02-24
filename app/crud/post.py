@@ -8,6 +8,8 @@ from fastapi import status, HTTPException
 # from sqlalchemy import insert
 # from app.models.post_tag import association_table
 from app.models.tag import Tag
+from app.models.post_tag import PostTag
+from app.crud.tag import get_tag_by_id_crud
 
 
 async def create_post_crud(post_in: CreatePostSchema, session: AsyncSession):
@@ -46,27 +48,53 @@ async def get_post_with_user_crud(post_id: int, session: AsyncSession):
 #     return {"message": "данные добавлены"}
 
 
-async def add_tag_to_post_crud(post_id: int, tag_id: int, session: AsyncSession):
+# async def add_tag_to_post_crud(post_id: int, tag_id: int, session: AsyncSession):
+#     stmt = (
+#         select(Post)
+#         .where(Post.id == post_id)
+#         .options(
+#             selectinload(
+#                 Post.tags,
+#             )
+#         )
+#     )
+#     result = await session.execute(stmt)
+#     post = result.scalars().one_or_none()
+#     if post is None:
+#         return "post_not_found"
+#     tag = await session.get(Tag, tag_id)
+#     if tag is None:
+#         return "tag_not_found"
+#     if tag in post.tags:
+#         return None
+#     post.tags.append(tag)
+#     await session.commit()
+#     return {"message": "Тэг добавлен к посту"}
+async def add_tag_to_post_crud(
+    post_id: int,
+    tag_id: int,
+    session: AsyncSession,
+):
     stmt = (
         select(Post)
         .where(Post.id == post_id)
-        .options(
-            selectinload(
-                Post.tags,
-            )
-        )
+        .options(selectinload(Post.tags).joinedload(PostTag.tag))
     )
     result = await session.execute(stmt)
     post = result.scalars().one_or_none()
     if post is None:
         return "post_not_found"
-    tag = await session.get(Tag, tag_id)
+    tag = await get_tag_by_id_crud(tag_id=tag_id, session=session)
     if tag is None:
         return "tag_not_found"
-    if tag in post.tags:
-        return None
-    post.tags.append(tag)
+    # for id_tag in post.tags:
+    #     if id_tag == tag_id:
+    #         return "связка идентификаторов уже существует"
+    #     data = (post_id, tag_id)
+    #     post.tags.append(data)
+    post.tags.append(tag.id)
     await session.commit()
+
     return {"message": "Тэг добавлен к посту"}
 
 
