@@ -2,11 +2,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String
 from app.database.base import Base
 from typing import TYPE_CHECKING
-from app.models.post_tag import association_table
+
+# from app.models.post_tag import association_table
 
 if TYPE_CHECKING:
     from app.models.user import User
-    from app.models.tag import Tag
+    from app.models.post_tag import PostTag
 
 
 class Post(Base):
@@ -16,6 +17,10 @@ class Post(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped["User"] = relationship("User", back_populates="posts")
-    tags: Mapped[list["Tag"]] = relationship(
-        "Tag", secondary=association_table, back_populates="posts"
+    # связь для императивного подхода
+    # tags: Mapped[list["Tag"]] = relationship(
+    #     "Tag", secondary=association_table, back_populates="posts"
+    # )
+    tags: Mapped[list["PostTag"]] = relationship(
+        "PostTag", cascade="all, delete-orphan", back_populates="post"
     )
