@@ -45,6 +45,13 @@ class ResponseUserForOtherRelationship(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+# class ResponseUserWithPostAndTags(BaseModel):
+#     id: int
+#     username: str
+#     email: EmailStr
+#     posts: list["ResponsePostWithTags"]
+
+
 class ResponseUserWithPostAndTags(BaseModel):
     id: int
     username: str

@@ -3,7 +3,10 @@ from pydantic import BaseModel, ConfigDict
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.schemas.post import ResponsePostSchemaForRelation, ResponsePostWithUser
+    from app.schemas.post import ResponsePostWithUser
+
+    # from app.schemas.post import ResponsePostSchemaForRelation
+    from app.schemas.post_tag import ResponsePostTagSchemaForPost
 
 
 class CreateTagSchema(BaseModel):
@@ -20,13 +23,25 @@ class ResponseTagForRelationship(CreateTagSchema):
     model_config = ConfigDict(from_attributes=True)
 
 
+# class ResponseTagWithPosts(CreateTagSchema):
+#     posts: list["ResponsePostSchemaForRelation"]
+#     model_config = ConfigDict(from_attributes=True)
+
+
 class ResponseTagWithPosts(CreateTagSchema):
-    posts: list["ResponsePostSchemaForRelation"]
+    posts: list["ResponsePostTagSchemaForPost"]
     model_config = ConfigDict(from_attributes=True)
+
+
+# class ResponseTagWithPostsAndUser(BaseModel):
+#     name: str
+#     color: str | None = None
+#     model_config = ConfigDict(from_attributes=True)
+#     posts: list["ResponsePostWithUser"]
 
 
 class ResponseTagWithPostsAndUser(BaseModel):
     name: str
     color: str | None = None
     model_config = ConfigDict(from_attributes=True)
-    posts: list["ResponsePostWithUser"]
+    posts: list["ResponsePostTagSchemaForPost"]

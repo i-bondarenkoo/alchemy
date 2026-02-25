@@ -4,6 +4,8 @@ from app.models.post import Post
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 from fastapi import status, HTTPException
+from app.crud.post_tag import create_post_tag_crud
+from sqlalchemy.exc import IntegrityError
 
 # from sqlalchemy import insert
 # from app.models.post_tag import association_table
@@ -70,32 +72,22 @@ async def get_post_with_user_crud(post_id: int, session: AsyncSession):
 #     post.tags.append(tag)
 #     await session.commit()
 #     return {"message": "Тэг добавлен к посту"}
+
+
 async def add_tag_to_post_crud(
     post_id: int,
     tag_id: int,
     session: AsyncSession,
 ):
-    stmt = (
-        select(Post)
-        .where(Post.id == post_id)
-        .options(selectinload(Post.tags).joinedload(PostTag.tag))
-    )
-    result = await session.execute(stmt)
-    post = result.scalars().one_or_none()
-    if post is None:
-        return "post_not_found"
-    tag = await get_tag_by_id_crud(tag_id=tag_id, session=session)
-    if tag is None:
-        return "tag_not_found"
-    # for id_tag in post.tags:
-    #     if id_tag == tag_id:
-    #         return "связка идентификаторов уже существует"
-    #     data = (post_id, tag_id)
-    #     post.tags.append(data)
-    post.tags.append(tag.id)
-    await session.commit()
-
-    return {"message": "Тэг добавлен к посту"}
+    try:
+        post_tag_row = await create_post_tag_crud(
+            post_id=post_id,
+            tag_id=tag_id,
+            session=session,
+        )
+    except IntegrityError as e:
+        return None
+    return post_tag_row
 
 
 async def get_post_with_tags_crud(post_id: int, session: AsyncSession):
@@ -105,7 +97,7 @@ async def get_post_with_tags_crud(post_id: int, session: AsyncSession):
         .options(
             selectinload(
                 Post.tags,
-            )
+            ).joinedload(PostTag.tag)
         )
     )
     result = await session.execute(stmt)

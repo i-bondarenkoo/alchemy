@@ -4,7 +4,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.schemas.user import ResponseUserForOtherRelationship
-    from app.schemas.tag import ResponseTagForRelationship
+
+    # from app.schemas.tag import ResponseTagForRelationship
+    from app.schemas.post_tag import ResponsePostTagSchemaForRelation
+    from app.schemas.post_tag import ResponsePostTagSchema
 
 
 class CreatePostSchema(BaseModel):
@@ -34,8 +37,22 @@ class ResponsePostWithUser(BaseModel):
     user: "ResponseUserForOtherRelationship"
 
 
+# class ResponsePostWithTags(BaseModel):
+#     id: int
+#     body: str | None = None
+#     title: str
+#     tags: list["ResponseTagForRelationship"]
+
+
+# class ResponsePostWithTags(BaseModel):
+#     id: int
+#     body: str | None = None
+#     title: str
+#     tags: list["ResponsePostTagSchemaForRelation"]
+
+
 class ResponsePostWithTags(BaseModel):
     id: int
     body: str | None = None
     title: str
-    tags: list["ResponseTagForRelationship"]
+    tags: list["ResponsePostTagSchemaForRelation"]

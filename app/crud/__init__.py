@@ -28,3 +28,4 @@ from app.crud.tag import (
     get_tag_with_posts_crud,
     get_tag_with_posts_and_user_crud,
 )
+from app.crud.post_tag import create_post_tag_crud

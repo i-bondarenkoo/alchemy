@@ -6,6 +6,7 @@ from app.schemas.user import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.post import Post
+from app.models.post_tag import PostTag
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import Depends, HTTPException, status
@@ -67,6 +68,21 @@ async def get_user_with_profile_crud(user_id: int, session: AsyncSession):
     return user
 
 
+# async def get_user_with_posts_and_posts_with_tags_crud(
+#     user_id: int, session: AsyncSession
+# ):
+#     stmt = (
+#         select(User)
+#         .where(User.id == user_id)
+#         .options(
+#             selectinload(User.posts).selectinload(Post.tags),
+#         )
+#     )
+#     result = await session.execute(stmt)
+#     user = result.scalars().one_or_none()
+#     if user is None:
+#         return None
+#     return user
 async def get_user_with_posts_and_posts_with_tags_crud(
     user_id: int, session: AsyncSession
 ):
@@ -74,7 +90,7 @@ async def get_user_with_posts_and_posts_with_tags_crud(
         select(User)
         .where(User.id == user_id)
         .options(
-            selectinload(User.posts).selectinload(Post.tags),
+            selectinload(User.posts).selectinload(Post.tags).joinedload(PostTag.tag),
         )
     )
     result = await session.execute(stmt)
