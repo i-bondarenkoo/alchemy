@@ -5,11 +5,18 @@ from app.crud.user import get_user_by_username_crud
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.security import verify_password
 from app.database.db import db_constructor
+from pydantic import BaseModel
+from app.auth.jwt import encode_jwt, decode_jwt
 
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
 )
+
+
+class ResponseToken(BaseModel):
+    token: str
+    token_type: str = "Bearer"
 
 
 # Найти пользователя в БД
@@ -36,15 +43,22 @@ async def authenticate_user(
     return user_db
 
 
-@router.post("/login")
+@router.post("/login", response_model=ResponseToken)
 async def login(
     data_in: UserLoginSchema,
     session: AsyncSession = Depends(db_constructor.get_session),
     user: User = Depends(authenticate_user),
 ):
+    data: dict = {}
 
-    return {
-        "auth": "success",
-        "username": user.username,
-        "email": user.email,
-    }
+    data.update(
+        username=user.username,
+        email=user.email,
+        id=user.id,
+    )
+    create_access_token = encode_jwt(
+        payload=data,
+    )
+    return ResponseToken(
+        token=create_access_token,
+    )
