@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import Depends, HTTPException, status
 from app.database.db import db_constructor
-from app.auth.helpers_auth import hash_pwd
+from app.utils.security import hash_pwd
 
 
 async def create_user_crud(user_in: CreateUserSchema, session: AsyncSession) -> User:

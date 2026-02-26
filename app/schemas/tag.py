@@ -6,7 +6,10 @@ if TYPE_CHECKING:
     from app.schemas.post import ResponsePostWithUser
 
     # from app.schemas.post import ResponsePostSchemaForRelation
-    from app.schemas.post_tag import ResponsePostTagSchemaForPost
+    from app.schemas.post_tag import (
+        ResponsePostTagSchemaForPost,
+        ResponsePostTagSchemaForRelation,
+    )
 
 
 class CreateTagSchema(BaseModel):
@@ -29,7 +32,7 @@ class ResponseTagForRelationship(CreateTagSchema):
 
 
 class ResponseTagWithPosts(CreateTagSchema):
-    posts: list["ResponsePostTagSchemaForPost"]
+    posts: list["ResponsePostTagSchemaForRelation"]
     model_config = ConfigDict(from_attributes=True)
 
 

@@ -3,7 +3,7 @@ from app.models.user import User
 from app.schemas.user import UserLoginSchema
 from app.crud.user import get_user_by_username_crud
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.auth.helpers_auth import verify_password
+from app.utils.security import verify_password
 from app.database.db import db_constructor
 
 router = APIRouter(
@@ -17,7 +17,10 @@ router = APIRouter(
 # Если есть → проверить пароль
 # Если ок → вернуть user
 # Если нет → None
-async def authenticate_user(data_in: UserLoginSchema, session: AsyncSession):
+async def authenticate_user(
+    data_in: UserLoginSchema,
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
     user_db = await get_user_by_username_crud(data_in=data_in, session=session)
     unauthed_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -39,6 +42,7 @@ async def login(
     session: AsyncSession = Depends(db_constructor.get_session),
     user: User = Depends(authenticate_user),
 ):
+
     return {
         "auth": "success",
         "username": user.username,
