@@ -17,7 +17,7 @@ class User(Base):
         server_default=func.now(),
         default=datetime.now,
     )
-
+    password_hash: Mapped[bytes]
     posts: Mapped[list["Post"]] = relationship(
         "Post",
         back_populates="user",

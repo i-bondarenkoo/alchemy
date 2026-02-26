@@ -8,6 +8,7 @@ from app.crud.user import (
     get_user_with_posts_and_posts_with_tags_crud,
     update_user_crud,
     get_user_by_id_dep,
+    get_user_by_username_crud,
 )
 from app.crud.post import (
     create_post_crud,

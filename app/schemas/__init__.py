@@ -7,6 +7,7 @@ from app.schemas.user import (
     ResponseUserWithPostAndTags,
     PatchUpdateUserSchema,
     FullUpdateUserSchema,
+    UserLoginSchema,
 )
 from app.schemas.post import (
     CreatePostSchema,

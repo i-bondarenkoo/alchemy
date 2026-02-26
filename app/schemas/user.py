@@ -9,13 +9,21 @@ if TYPE_CHECKING:
     from app.schemas.post import ResponsePostSchemaForRelation, ResponsePostWithTags
 
 
+class UserLoginSchema(BaseModel):
+    username: str
+    password: str
+
+
 class CreateUserSchema(BaseModel):
     username: str
     email: EmailStr
+    password: str
 
 
-class ResponseUserSchema(CreateUserSchema):
+class ResponseUserSchema(BaseModel):
     id: int
+    username: str
+    email: EmailStr
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

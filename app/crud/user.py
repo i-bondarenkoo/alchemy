@@ -2,6 +2,7 @@ from app.schemas.user import (
     CreateUserSchema,
     PatchUpdateUserSchema,
     FullUpdateUserSchema,
+    UserLoginSchema,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
@@ -11,10 +12,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import Depends, HTTPException, status
 from app.database.db import db_constructor
+from app.auth.helpers_auth import hash_pwd
 
 
 async def create_user_crud(user_in: CreateUserSchema, session: AsyncSession) -> User:
-    new_user = User(**user_in.model_dump())
+    new_user = User(
+        username=user_in.username,
+        email=user_in.email,
+        password_hash=hash_pwd(user_in.password),
+    )
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
@@ -128,4 +134,16 @@ async def get_user_by_id_dep(
                 status_code=404,
                 detail="Пользователь не найден",
             )
+    return user
+
+
+async def get_user_by_username_crud(
+    data_in: UserLoginSchema,
+    session: AsyncSession,
+):
+    stmt = select(User).where(User.username == data_in.username)
+    result = await session.execute(stmt)
+    user = result.scalars().one_or_none()
+    if user is None:
+        return None
     return user
