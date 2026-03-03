@@ -10,4 +10,5 @@ class ResponseToken(BaseModel):
 class ResponseTokenData(BaseModel):
     username: str
     email: EmailStr
-    type: str
+    id: int
+    # type: str

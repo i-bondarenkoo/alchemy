@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from app.models.user import User
 from app.schemas.user import UserLoginSchema
-from app.crud.user import get_user_by_username_crud, get_user_by_id_crud
+from app.crud.user import get_user_by_username_crud
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.security import verify_password
 from app.database.db import db_constructor
@@ -11,13 +11,12 @@ from app.auth.schemas import ResponseToken
 from app.auth.helpers_jwt import (
     create_access_token,
     create_refresh_token,
-    validate_token_type,
 )
 from app.auth.jwt import decode_jwt
 from app.auth.schemas import ResponseTokenData
 
 http_bearer = HTTPBearer(auto_error=False)
-
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -48,7 +47,7 @@ async def authenticate_user(
     return user_db
 
 
-@router.post("/login", response_model=ResponseToken)
+@router.post("/login/", response_model=ResponseToken)
 async def login(
     user: User = Depends(authenticate_user),
 ):
@@ -65,46 +64,49 @@ async def login(
     response_model=ResponseToken,
     response_model_exclude_none=True,
 )
-async def refrest_jwt_token(
-    session: AsyncSession = Depends(db_constructor.get_session),
+async def auth_refresh_jwt(
     token=Depends(http_bearer),
+    session: AsyncSession = Depends(db_constructor.get_session),
 ):
-    token = token.credentials
-    if validate_token_type(token) == "access":
+    token_str = token.credentials
+    token_decode: dict = decode_jwt(token_str)
+    if token_decode["type"] != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Для получения access токена нужен валидный refresh токен",
+            detail="Для получения нового access токена нужен валидный refresh токен",
         )
-    decode_token: dict = decode_jwt(token)
-    current_user: User = await get_user_by_id_crud(
-        user_id=decode_token["id"],
-        session=session,
+    username_for_token: str = token_decode["sub"]
+    data_in: UserLoginSchema = UserLoginSchema(
+        username=username_for_token,
+        password="",
     )
-    if current_user is None:
+    user = await get_user_by_username_crud(data_in=data_in, session=session)
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверный токен",
+            detail="Передан не валидный токен",
         )
-    new_access_token = create_access_token(user=current_user)
+    access_token = create_access_token(
+        user=user,
+    )
     return ResponseToken(
-        access_token=new_access_token,
+        access_token=access_token,
     )
 
 
 @router.get("/users/me")
-async def check_auth_user(
-    token: str = Depends(http_bearer),
+def user_info(
+    token=Depends(http_bearer),
 ):
-    # info = validate_token_type(token)
-    # if not info:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="Для получения нинформации о пользователе нужнен тип токена - access",
-    #     )
-    # user = decode_jwt(token)
-    # return ResponseTokenData(
-    #     usernmae=user["username"],
-    #     email=user["email"],
-    #     type=user["type"],
-    # )
-    pass
+    token_str: str = token.credentials
+    token_decode: dict = decode_jwt(token_str)
+    if token_decode["type"] != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Передан не валидный токен",
+        )
+    return ResponseTokenData(
+        username=token_decode["username"],
+        email=token_decode["email"],
+        id=token_decode["id"],
+    )

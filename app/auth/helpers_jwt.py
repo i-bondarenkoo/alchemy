@@ -51,12 +51,3 @@ def create_refresh_token(
             days=settings.auth_jwt.refrest_token_expire_days,
         ),
     )
-
-
-def validate_token_type(
-    token: str,
-) -> bool:
-    current_token_type = decode_jwt(token)
-    if current_token_type == "access":
-        return "access"
-    return "refresh"
