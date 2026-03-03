@@ -1,35 +1,27 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from app.models.user import User
 from app.schemas.user import UserLoginSchema
-from app.crud.user import get_user_by_username_crud
+from app.crud.user import get_user_by_username_crud, get_user_by_id_crud
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.security import verify_password
 from app.database.db import db_constructor
-from pydantic import BaseModel
-from app.auth.jwt import encode_jwt, decode_jwt
-from jwt.exceptions import InvalidTokenError
-from fastapi.security import OAuth2PasswordBearer
+
+from fastapi.security import HTTPBearer
+from app.auth.schemas import ResponseToken
+from app.auth.helpers_jwt import (
+    create_access_token,
+    create_refresh_token,
+    validate_token_type,
+)
+from app.auth.jwt import decode_jwt
+from app.auth.schemas import ResponseTokenData
+
+http_bearer = HTTPBearer(auto_error=False)
 
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
 )
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
-
-class ResponseToken(BaseModel):
-    access_token: str
-    token_type: str = "Bearer"
-
-
-def create_pd_model(username: str, password: str) -> UserLoginSchema:
-    return UserLoginSchema(
-        username=username,
-        password=password,
-    )
 
 
 async def authenticate_user(
@@ -37,7 +29,7 @@ async def authenticate_user(
     password: str = Form(),
     session: AsyncSession = Depends(db_constructor.get_session),
 ):
-    data_in: UserLoginSchema = create_pd_model(
+    data_in: UserLoginSchema = UserLoginSchema(
         username=username,
         password=password,
     )
@@ -56,48 +48,63 @@ async def authenticate_user(
     return user_db
 
 
-def create_access_token(
-    user: User,
-):
-    user_data: dict = {}
-    user_data.update(
-        username=user.username,
-        email=user.email,
-        id=user.id,
-    )
-    token = encode_jwt(
-        payload=user_data,
-    )
-    return ResponseToken(
-        access_token=token,
-    )
-
-
-def decode_token(token: str):
-    data: dict = decode_jwt(token)
-    return {
-        "username": data["username"],
-        "email": data["email"],
-        "id": data["id"],
-    }
-
-
 @router.post("/login", response_model=ResponseToken)
 async def login(
     user: User = Depends(authenticate_user),
 ):
-    return create_access_token(user)
+    access_token = create_access_token(user)
+    refresh_token = create_refresh_token(user)
+    return ResponseToken(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@router.post(
+    "/refresh/",
+    response_model=ResponseToken,
+    response_model_exclude_none=True,
+)
+async def refrest_jwt_token(
+    session: AsyncSession = Depends(db_constructor.get_session),
+    token=Depends(http_bearer),
+):
+    token = token.credentials
+    if validate_token_type(token) == "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Для получения access токена нужен валидный refresh токен",
+        )
+    decode_token: dict = decode_jwt(token)
+    current_user: User = await get_user_by_id_crud(
+        user_id=decode_token["id"],
+        session=session,
+    )
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный токен",
+        )
+    new_access_token = create_access_token(user=current_user)
+    return ResponseToken(
+        access_token=new_access_token,
+    )
 
 
 @router.get("/users/me")
 async def check_auth_user(
-    token: str = Depends(oauth2_scheme),
-    # token: str,
+    token: str = Depends(http_bearer),
 ):
-    try:
-        return decode_token(token)
-    except InvalidTokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Передан не верный токен",
-        )
+    # info = validate_token_type(token)
+    # if not info:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Для получения нинформации о пользователе нужнен тип токена - access",
+    #     )
+    # user = decode_jwt(token)
+    # return ResponseTokenData(
+    #     usernmae=user["username"],
+    #     email=user["email"],
+    #     type=user["type"],
+    # )
+    pass
