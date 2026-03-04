@@ -47,6 +47,61 @@ async def get_current_user(
     return user_db
 
 
+def get_token_payload(token=Depends(http_bearer)):
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Передан не валидный токен",
+        )
+    try:
+        return decode_jwt(token.credentials)
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Передан не валидный токен",
+        )
+
+
+async def get_user_from_access_token(
+    token_data: dict = Depends(get_token_payload),
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    if token_data["type"] != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Нужно передать токен типа - access",
+        )
+    username = token_data["username"]
+    data_in: UserLoginSchema = UserLoginSchema(username=username, password="")
+    user = await get_user_by_username_crud(data_in=data_in, session=session)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Передан не валидный токен",
+        )
+    return user
+
+
+async def get_user_from_refresh_token(
+    token_data: dict = Depends(get_token_payload),
+    session: AsyncSession = Depends(db_constructor.get_session),
+):
+    if token_data["type"] != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Нужно передать токен типа - refresh",
+        )
+    username = token_data["sub"]
+    data_in: UserLoginSchema = UserLoginSchema(username=username, password="")
+    user = await get_user_by_username_crud(data_in=data_in, session=session)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Передан не валидный токен",
+        )
+    return user
+
+
 @router.post("/login/", response_model=ResponseToken)
 async def login(
     user: User = Depends(get_current_user),
@@ -65,60 +120,23 @@ async def login(
     response_model_exclude_none=True,
 )
 async def auth_refresh_jwt(
-    token=Depends(http_bearer),
-    session: AsyncSession = Depends(db_constructor.get_session),
+    user: User = Depends(get_user_from_refresh_token),
 ):
-    try:
-        token_str = token.credentials
-        token_decode: dict = decode_jwt(token_str)
-        if token_decode["type"] != "refresh":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Для получения нового access токена нужен валидный refresh токен",
-            )
-        username_for_token: str = token_decode["sub"]
-        data_in: UserLoginSchema = UserLoginSchema(
-            username=username_for_token,
-            password="",
-        )
-        user = await get_user_by_username_crud(data_in=data_in, session=session)
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Передан не валидный токен",
-            )
-        access_token = create_access_token(
-            user=user,
-        )
-        return ResponseToken(
-            access_token=access_token,
-        )
-    except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Передан не валидный токен",
-        )
+
+    access_token = create_access_token(
+        user=user,
+    )
+    return ResponseToken(
+        access_token=access_token,
+    )
 
 
-@router.get("/users/me")
+@router.get("/users/me", response_model=ResponseTokenData)
 def user_info(
-    token=Depends(http_bearer),
+    user: User = Depends(get_user_from_access_token),
 ):
-    try:
-        token_str: str = token.credentials
-        token_decode: dict = decode_jwt(token_str)
-        if token_decode["type"] != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Передан не валидный токен",
-            )
-        return ResponseTokenData(
-            username=token_decode["username"],
-            email=token_decode["email"],
-            id=token_decode["id"],
-        )
-    except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Передан не валидный токен",
-        )
+    return ResponseTokenData(
+        username=user.username,
+        email=user.email,
+        id=user.id,
+    )
